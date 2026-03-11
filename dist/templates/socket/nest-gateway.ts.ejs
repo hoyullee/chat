@@ -1,0 +1,34 @@
+import {
+  WebSocketGateway,
+  WebSocketServer,
+  SubscribeMessage,
+  MessageBody,
+  ConnectedSocket,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+} from '@nestjs/websockets';
+import { Server, Socket } from 'socket.io';
+
+@WebSocketGateway({ cors: { origin: '*' }, namespace: '<%= nameKebab %>' })
+export class <%= namePascal %>Gateway implements OnGatewayConnection, OnGatewayDisconnect {
+  @WebSocketServer()
+  server: Server;
+
+  handleConnection(client: Socket) {
+    console.log(`[<%= namePascal %>Gateway] 연결: ${client.id}`);
+  }
+
+  handleDisconnect(client: Socket) {
+    console.log(`[<%= namePascal %>Gateway] 해제: ${client.id}`);
+  }
+
+  @SubscribeMessage('<%= nameCamel %>:event')
+  handleEvent(
+    @MessageBody() data: any,
+    @ConnectedSocket() client: Socket,
+  ) {
+    // TODO: 이벤트 처리 로직 구현
+    this.server.emit('<%= nameCamel %>:broadcast', data);
+    return data;
+  }
+}

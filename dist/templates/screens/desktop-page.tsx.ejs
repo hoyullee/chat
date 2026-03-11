@@ -1,0 +1,19 @@
+import React from 'react';
+
+interface <%= namePascal %>PageProps {}
+
+export function <%= namePascal %>Page({}: <%= namePascal %>PageProps) {
+  return (
+    <div style={styles.container}>
+      <h2><%= namePascal %></h2>
+    </div>
+  );
+}
+
+const styles = {
+  container: {
+    padding: '24px',
+    height: '100%',
+    backgroundColor: '#fff',
+  } as React.CSSProperties,
+};

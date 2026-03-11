@@ -1,0 +1,11 @@
+import { Module } from '@nestjs/common';
+import { <%= namePascal %>Controller } from './<%= nameKebab %>.controller';
+import { <%= namePascal %>Service } from './<%= nameKebab %>.service';
+
+@Module({
+  // imports: [TypeOrmModule.forFeature([<%= namePascal %>Entity])],
+  controllers: [<%= namePascal %>Controller],
+  providers: [<%= namePascal %>Service],
+  exports: [<%= namePascal %>Service],
+})
+export class <%= namePascal %>Module {}

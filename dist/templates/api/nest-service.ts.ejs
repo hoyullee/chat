@@ -1,0 +1,30 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+
+@Injectable()
+export class <%= namePascal %>Service {
+  // TODO: @InjectRepository 추가 후 TypeORM 연동
+
+  findAll() {
+    return [];
+  }
+
+  findOne(id: string) {
+    // TODO: repository.findOne({ where: { id } })
+    throw new NotFoundException(`${id} not found`);
+  }
+
+  create(data: any) {
+    // TODO: repository.save(data)
+    return data;
+  }
+
+  async update(id: string, data: any) {
+    // TODO: repository.update(id, data)
+    return { id, ...data };
+  }
+
+  async remove(id: string) {
+    // TODO: repository.delete(id)
+    return { deleted: true };
+  }
+}

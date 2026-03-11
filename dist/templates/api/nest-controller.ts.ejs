@@ -1,0 +1,34 @@
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { <%= namePascal %>Service } from './<%= nameKebab %>.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+
+@Controller('<%= nameKebab %>')
+@UseGuards(JwtAuthGuard)
+export class <%= namePascal %>Controller {
+  constructor(private readonly <%= nameCamel %>Service: <%= namePascal %>Service) {}
+
+  @Get()
+  findAll() {
+    return this.<%= nameCamel %>Service.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.<%= nameCamel %>Service.findOne(id);
+  }
+
+  @Post()
+  create(@Body() body: any) {
+    return this.<%= nameCamel %>Service.create(body);
+  }
+
+  @Put(':id')
+  update(@Param('id') id: string, @Body() body: any) {
+    return this.<%= nameCamel %>Service.update(id, body);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.<%= nameCamel %>Service.remove(id);
+  }
+}
