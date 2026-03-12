@@ -1,0 +1,16 @@
+{
+  "name": "newchat2",
+  "version": "0.1.0",
+  "platforms": [
+    "mobile",
+    "desktop",
+    "server"
+  ],
+  "packageManager": "pnpm",
+  "features": {
+    "auth": true,
+    "friends": true,
+    "chat": true,
+    "emoticons": true
+  }
+}
