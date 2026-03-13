@@ -5,7 +5,8 @@
       "Bash(npm run:*)",
       "Bash(npm link:*)",
       "Bash(chat-cli --help)",
-      "Bash(grep -E \"^dotenv$\")"
+      "Bash(grep -E \"^dotenv$\")",
+      "Bash(pnpm --version)"
     ]
   }
 }
