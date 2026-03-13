@@ -21,4 +21,9 @@ export class ChatController {
   getMessages(@Param('id') id: string, @Query('limit') limit?: string) {
     return this.chatService.getMessages(id, limit ? parseInt(limit) : 50);
   }
+
+  @Post('rooms/:id/messages')
+  sendMessage(@Param('id') roomId: string, @Req() req: any, @Body() body: { content: string; type?: string }) {
+    return this.chatService.saveMessage({ roomId, content: body.content, type: (body.type ?? 'text') as any, senderId: req.user.sub });
+  }
 }

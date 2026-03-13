@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { useChatStore } from '../../store/chatStore';
+import { useAuthStore } from '../../store/authStore';
 import { useSocket } from '../../hooks/useSocket';
 
 export function ChatRoomScreen({ route }: any) {
   const { roomId } = route.params;
   const { messages, loadMessages, addMessage } = useChatStore();
+  const user = useAuthStore((s) => s.user);
   const socket = useSocket();
   const [text, setText] = useState('');
   const [showEmoticons, setShowEmoticons] = useState(false);
@@ -16,7 +18,7 @@ export function ChatRoomScreen({ route }: any) {
     socket.emit('join-room', { roomId });
 
     socket.on('receive-message', (msg: any) => {
-      addMessage(roomId, msg);
+      addMessage(roomId, { ...msg, isMine: msg.senderId === user?.id });
       flatListRef.current?.scrollToEnd();
     });
 
@@ -27,9 +29,16 @@ export function ChatRoomScreen({ route }: any) {
   }, [roomId]);
 
   const sendMessage = () => {
-    if (!text.trim()) return;
-    socket.emit('send-message', { roomId, content: text, type: 'text' });
+    if (!text.trim() || !user?.id) return;
+    const content = text;
     setText('');
+    socket.emit('send-message', { roomId, content, type: 'text', senderId: user.id });
+  };
+
+  const sendEmoticon = (emoji: string) => {
+    if (!user?.id) return;
+    socket.emit('send-message', { roomId, content: emoji, type: 'emoticon', senderId: user.id });
+    setShowEmoticons(false);
   };
 
   const roomMessages = messages[roomId] || [];
@@ -51,6 +60,15 @@ export function ChatRoomScreen({ route }: any) {
         )}
         onContentSizeChange={() => flatListRef.current?.scrollToEnd()}
       />
+      {showEmoticons && (
+        <View style={styles.emoticonPicker}>
+          {['😀', '😂', '❤️', '👍', '😍', '🎉', '😭', '😊', '🔥', '✨', '🥰', '😎'].map((emoji) => (
+            <TouchableOpacity key={emoji} onPress={() => sendEmoticon(emoji)} style={styles.emoticonItem}>
+              <Text style={{ fontSize: 28 }}>{emoji}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
       <View style={styles.inputRow}>
         <TouchableOpacity onPress={() => setShowEmoticons(!showEmoticons)} style={styles.emojiBtn}>
           <Text style={{ fontSize: 22 }}>😊</Text>
@@ -83,4 +101,6 @@ const styles = StyleSheet.create({
   input: { flex: 1, borderWidth: 1, borderColor: '#ddd', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, maxHeight: 100, marginHorizontal: 8 },
   sendBtn: { backgroundColor: '#FEE500', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8 },
   sendText: { fontWeight: 'bold' },
+  emoticonPicker: { flexDirection: 'row', flexWrap: 'wrap', padding: 8, backgroundColor: '#f9f9f9', borderTopWidth: 1, borderTopColor: '#eee' },
+  emoticonItem: { padding: 6 },
 });

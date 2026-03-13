@@ -6,7 +6,12 @@
       "Bash(npm link:*)",
       "Bash(chat-cli --help)",
       "Bash(grep -E \"^dotenv$\")",
-      "Bash(pnpm --version)"
+      "Bash(pnpm --version)",
+      "Bash(find /Users/hoyul.lee/Documents/chat/newchat2/apps/mobile/src -type f \\\\\\(-name *.tsx -o -name *.ts \\\\\\))",
+      "Bash(pnpm install:*)",
+      "Bash(npx playwright:*)",
+      "Bash(pnpm test:e2e)",
+      "Bash(NODE_ENV=test JWT_SECRET=test-secret JWT_REFRESH_SECRET=test-refresh-secret timeout 20 pnpm dev)"
     ]
   }
 }

@@ -10,7 +10,13 @@ interface Message {
   isRead: boolean;
   createdAt: string;
 }
-interface ChatRoom { id: string; name: string; type: string; lastMessage?: string; }
+interface ChatRoom {
+  id: string;
+  name: string;
+  type: string;
+  lastMessage?: string | null;
+  otherUser?: { id: string; displayName: string; avatar?: string } | null;
+}
 
 interface ChatState {
   rooms: ChatRoom[];

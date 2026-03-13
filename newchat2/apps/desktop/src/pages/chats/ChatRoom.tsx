@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useChatStore } from '../../store/chatStore';
 import { useAuthStore } from '../../store/authStore';
 import { useSocket } from '../../hooks/useSocket';
+import { api } from '../../services/api';
 
 interface Props { roomId: string; }
 
@@ -10,6 +11,7 @@ export function ChatRoom({ roomId }: Props) {
   const user = useAuthStore((s) => s.user);
   const socket = useSocket();
   const [text, setText] = useState('');
+  const [showEmoticons, setShowEmoticons] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -44,10 +46,27 @@ export function ChatRoom({ roomId }: Props) {
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages[roomId]]);
 
-  const send = () => {
+  const send = async () => {
     if (!text.trim() || !user?.id) return;
-    socket.emit('send-message', { roomId, content: text, type: 'text', senderId: user.id });
+    const content = text;
     setText('');
+    try {
+      const { data: saved } = await api.post(`/chat/rooms/${roomId}/messages`, { content, type: 'text' });
+      addMessage(roomId, saved);
+      socket.emit('send-message', saved); // 다른 사용자에게 실시간 브로드캐스트
+    } catch {
+      setText(content); // 오류 시 입력 복원
+    }
+  };
+
+  const sendEmoticon = async (emoji: string) => {
+    if (!user?.id) return;
+    setShowEmoticons(false);
+    try {
+      const { data: saved } = await api.post(`/chat/rooms/${roomId}/messages`, { content: emoji, type: 'emoticon' });
+      addMessage(roomId, saved);
+      socket.emit('send-message', saved);
+    } catch {}
   };
 
   const roomMessages = messages[roomId] || [];
@@ -77,12 +96,20 @@ export function ChatRoom({ roomId }: Props) {
         })}
         <div ref={bottomRef} />
       </div>
-      <div style={{ display: 'flex', padding: 8, background: '#fff', borderTop: '1px solid #eee', gap: 8 }}>
+      {showEmoticons && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', padding: 8, background: '#f9f9f9', borderTop: '1px solid #eee', gap: 4 }}>
+          {['😀', '😂', '❤️', '👍', '😍', '🎉', '😭', '😊', '🔥', '✨', '🥰', '😎'].map((emoji) => (
+            <button key={emoji} onClick={() => sendEmoticon(emoji)} style={{ fontSize: 24, background: 'none', border: 'none', cursor: 'pointer', padding: 4, borderRadius: 8 }}>{emoji}</button>
+          ))}
+        </div>
+      )}
+      <div style={{ display: 'flex', padding: 8, background: '#fff', borderTop: '1px solid #eee', gap: 8, alignItems: 'center' }}>
+        <button onClick={() => setShowEmoticons(!showEmoticons)} style={{ fontSize: 22, background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px' }}>😊</button>
         <input
           style={{ flex: 1, padding: '8px 12px', borderRadius: 20, border: '1px solid #ddd', fontSize: 14 }}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), send())}
+          onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing && (e.preventDefault(), send())}
           placeholder="메시지 입력..."
           autoFocus
         />

@@ -12,7 +12,8 @@ async function bootstrap() {
   });
 
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api', { exclude: ['health'] });
+  app.getHttpAdapter().get('/health', (_req, res) => res.json({ ok: true }));
 
   await app.listen(process.env.PORT || 3000);
   console.log(`Server running on port ${process.env.PORT || 3000}`);

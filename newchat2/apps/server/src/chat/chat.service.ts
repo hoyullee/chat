@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Not, In, Repository } from 'typeorm';
 import { ChatRoom, RoomType } from './chat-room.entity';
 import { Message } from './message.entity';
+import { User } from '../users/user.entity';
 
 @Injectable()
 export class ChatService {
@@ -11,14 +12,34 @@ export class ChatService {
     private readonly roomRepo: Repository<ChatRoom>,
     @InjectRepository(Message)
     private readonly messageRepo: Repository<Message>,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
   ) {}
 
-  getRooms(userId: string) {
-    return this.roomRepo
+  async getRooms(userId: string) {
+    const rooms = await this.roomRepo
       .createQueryBuilder('room')
       .where("(',' || room.participantIds || ',') LIKE :pattern", { pattern: `%,${userId},%` })
       .orderBy('room.createdAt', 'DESC')
       .getMany();
+
+    return Promise.all(rooms.map(async (room) => {
+      let otherUser: { id: string; displayName: string; avatar?: string } | null = null;
+      if (room.type === RoomType.DIRECT) {
+        const otherId = room.participantIds.find((id) => id !== userId);
+        if (otherId) {
+          const user = await this.userRepo.findOne({ where: { id: otherId } });
+          if (user) otherUser = { id: user.id, displayName: user.displayName, avatar: user.avatar };
+        }
+      }
+
+      const lastMsg = await this.messageRepo.findOne({
+        where: { roomId: room.id },
+        order: { createdAt: 'DESC' },
+      });
+
+      return { ...room, otherUser, lastMessage: lastMsg?.content ?? null };
+    }));
   }
 
   getMessages(roomId: string, limit = 50) {

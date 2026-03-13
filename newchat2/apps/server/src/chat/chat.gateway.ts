@@ -9,7 +9,6 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service';
-import { MessageType } from './message.entity';
 
 @WebSocketGateway({ cors: { origin: '*' } })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -47,13 +46,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('send-message')
-  async handleMessage(
-    @MessageBody() data: { roomId: string; content: string; type: MessageType; senderId: string },
+  handleMessage(
+    @MessageBody() data: { roomId: string; [key: string]: any },
     @ConnectedSocket() client: Socket,
   ) {
-    const message = await this.chatService.saveMessage(data);
-    this.server.to(data.roomId).emit('receive-message', message);
-    return message;
+    // 저장은 HTTP API에서 처리, 여기서는 실시간 브로드캐스트만
+    client.to(data.roomId).emit('receive-message', data);
   }
 
   @SubscribeMessage('typing')
