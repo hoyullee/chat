@@ -16,14 +16,22 @@ export function ChatsPage({ initialRoomId, onRoomClear }: Props) {
     if (initialRoomId) openChatWindow(initialRoomId);
   }, [initialRoomId]);
 
-  const openChatWindow = (roomId: string) => {
+  const openChatWindow = (roomId: string, title?: string) => {
     onRoomClear?.();
-    const url = `${window.location.origin}${window.location.pathname}?chatRoom=${roomId}`;
+    const t = title ? `&title=${encodeURIComponent(title)}` : '';
+    const url = `${window.location.origin}${window.location.pathname}?chatRoom=${roomId}${t}`;
     window.open(url, `chat-${roomId}`, 'width=400,height=650,resizable=yes');
   };
 
   return (
-    <div>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {/* 채팅 목록 헤더 */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid #f0f0f0', background: '#fff' }}>
+        <span style={{ fontWeight: 'bold', fontSize: 15 }}>채팅 {rooms.length}</span>
+        <div style={{ width: 30, height: 30 }} />
+      </div>
+
+      <div style={{ flex: 1, overflowY: 'auto' }}>
       {rooms.length === 0 && (
         <p style={{ color: '#aaa', textAlign: 'center', marginTop: 40 }}>채팅방이 없습니다.</p>
       )}
@@ -35,8 +43,9 @@ export function ChatsPage({ initialRoomId, onRoomClear }: Props) {
         return (
           <div
             key={room.id}
+            className="list-item"
             onClick={() => setSelectedRoomId(room.id)}
-            onDoubleClick={() => openChatWindow(room.id)}
+            onDoubleClick={() => openChatWindow(room.id, friendName)}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -80,6 +89,7 @@ export function ChatsPage({ initialRoomId, onRoomClear }: Props) {
           </div>
         );
       })}
+      </div>
     </div>
   );
 }

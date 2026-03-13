@@ -24,6 +24,7 @@ interface ChatState {
   loadRooms: () => Promise<void>;
   loadMessages: (roomId: string) => Promise<void>;
   addMessage: (roomId: string, msg: Message) => void;
+  updateLastMessage: (roomId: string, content: string) => void;
   markRead: (roomId: string, messageIds: string[]) => void;
   openDirectChat: (targetUserId: string) => Promise<string>;
 }
@@ -39,6 +40,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
   addMessage: (roomId, msg) => {
     const curr = get().messages[roomId] || [];
     set({ messages: { ...get().messages, [roomId]: [...curr, msg] } });
+  },
+  updateLastMessage: (roomId: string, content: string) => {
+    const rooms = get().rooms;
+    const target = rooms.find((r) => r.id === roomId);
+    if (!target) return;
+    // 해당 방을 최신 메시지로 갱신 후 목록 맨 위로 이동
+    const updated = [{ ...target, lastMessage: content }, ...rooms.filter((r) => r.id !== roomId)];
+    set({ rooms: updated });
   },
   markRead: (roomId, messageIds) => {
     const curr = get().messages[roomId] || [];

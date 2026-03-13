@@ -22,6 +22,9 @@ export class User {
   @Column({ nullable: true })
   avatar: string;
 
+  @Column({ nullable: true })
+  backgroundImage: string;
+
   @Column({ type: 'varchar', default: UserRole.USER })
   role: UserRole;
 

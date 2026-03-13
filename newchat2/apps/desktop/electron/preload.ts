@@ -8,3 +8,9 @@ contextBridge.exposeInMainWorld('ipc', {
     return () => ipcRenderer.removeListener(channel, listener);
   },
 });
+
+contextBridge.exposeInMainWorld('windowControls', {
+  minimize: () => ipcRenderer.send('win-minimize'),
+  maximize: () => ipcRenderer.send('win-maximize'),
+  close:    () => ipcRenderer.send('win-close'),
+});

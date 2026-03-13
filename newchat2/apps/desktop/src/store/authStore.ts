@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { api } from '../services/api';
 
-interface User { id: string; email: string; displayName: string; role: 'user' | 'admin'; }
+interface User { id: string; email: string; displayName: string; role: 'user' | 'admin'; avatar?: string; backgroundImage?: string; }
 
 interface AuthState {
   user: User | null;
@@ -9,6 +9,7 @@ interface AuthState {
   init: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  updateProfile: (data: { displayName?: string; avatar?: string; backgroundImage?: string }) => Promise<User>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -48,6 +49,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     localStorage.setItem('deviceId', deviceId);
     localStorage.setItem('user', JSON.stringify(user));
     set({ user, accessToken: data.accessToken });
+  },
+
+  updateProfile: async (data) => {
+    const { data: updated } = await api.patch('/users/me', data);
+    const user: User = { id: updated.id, email: updated.email, displayName: updated.displayName, role: updated.role, avatar: updated.avatar, backgroundImage: updated.backgroundImage };
+    localStorage.setItem('user', JSON.stringify(user));
+    set({ user });
+    return user;
   },
 
   logout: async () => {

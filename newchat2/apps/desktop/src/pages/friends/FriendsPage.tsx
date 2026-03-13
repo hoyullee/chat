@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useFriendStore } from '../../store/friendStore';
 import { useChatStore } from '../../store/chatStore';
+import { useAuthStore } from '../../store/authStore';
+import { ProfileDetailPage, ProfileUser } from '../profile/ProfileDetailPage';
 
 function useToast() {
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
@@ -18,15 +20,18 @@ interface Props {
 export function FriendsPage({ onOpenChat }: Props) {
   const { friends, searchResults, loadFriends, searchUsers, addFriend, clearSearch } = useFriendStore();
   const { openDirectChat } = useChatStore();
+  const user = useAuthStore((s) => s.user);
 
-  const openChatWindow = (roomId: string) => {
-    const url = `${window.location.origin}${window.location.pathname}?chatRoom=${roomId}`;
+  const openChatWindow = (roomId: string, title?: string) => {
+    const t = title ? `&title=${encodeURIComponent(title)}` : '';
+    const url = `${window.location.origin}${window.location.pathname}?chatRoom=${roomId}${t}`;
     window.open(url, `chat-${roomId}`, 'width=400,height=650,resizable=yes');
   };
   const [showAdd, setShowAdd] = useState(false);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [profileTarget, setProfileTarget] = useState<{ user: ProfileUser; isOwn: boolean } | null>(null);
   const friendIds = new Set(friends.map((f) => f.id));
   const { toast, show: showToast } = useToast();
 
@@ -51,10 +56,10 @@ export function FriendsPage({ onOpenChat }: Props) {
     }
   };
 
-  const handleDoubleClick = async (friendId: string) => {
+  const handleDoubleClick = async (friendId: string, friendName: string) => {
     try {
       const roomId = await openDirectChat(friendId);
-      openChatWindow(roomId);
+      openChatWindow(roomId, friendName);
     } catch {
       showToast('채팅방을 열 수 없습니다.', 'error');
     }
@@ -62,9 +67,16 @@ export function FriendsPage({ onOpenChat }: Props) {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      {profileTarget && (
+        <ProfileDetailPage
+          profileUser={profileTarget.user}
+          isOwn={profileTarget.isOwn}
+          onClose={() => setProfileTarget(null)}
+        />
+      )}
       {/* 상단 토스트 */}
       {toast && (
-        <div style={{
+        <div className="toast-anim" style={{
           position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)',
           background: toast.type === 'success' ? '#e6f9ee' : '#fff0f0',
           color: toast.type === 'success' ? '#1a7a3c' : '#c0392b',
@@ -84,34 +96,61 @@ export function FriendsPage({ onOpenChat }: Props) {
         >+</button>
       </div>
 
+      {/* 내 프로필 */}
+      {user && (
+        <div
+          onClick={() => setProfileTarget({ user: { id: user.id, displayName: user.displayName, email: user.email, avatar: user.avatar, backgroundImage: user.backgroundImage }, isOwn: true })}
+          style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', background: '#fff', borderBottom: '1px solid #f0f0f0', cursor: 'pointer' }}
+        >
+          <div style={{
+            width: 48, height: 48, borderRadius: 24, flexShrink: 0,
+            background: user.avatar ? 'transparent' : '#FEE500',
+            backgroundImage: user.avatar ? `url(${user.avatar})` : undefined,
+            backgroundSize: 'cover', backgroundPosition: 'center',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: 20,
+          }}>
+            {!user.avatar && (user.displayName?.[0] ?? '?')}
+          </div>
+          <div>
+            <div style={{ fontWeight: 'bold', fontSize: 15 }}>{user.displayName}</div>
+            <div style={{ fontSize: 12, color: '#888' }}>{user.email}</div>
+          </div>
+        </div>
+      )}
+
       {/* 친구 목록 */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '8px 8px 0' }}>
         {friends.length === 0 && <p style={{ color: '#aaa', textAlign: 'center', marginTop: 40 }}>친구를 추가해보세요!</p>}
         {friends.map((f) => {
           const isSelected = selectedId === f.id;
           return (
             <div
               key={f.id}
+              className="list-item"
               onClick={() => setSelectedId(isSelected ? null : f.id)}
-              onDoubleClick={() => handleDoubleClick(f.id)}
+              onDoubleClick={() => handleDoubleClick(f.id, f.displayName)}
               style={{
                 display: 'flex', alignItems: 'center', padding: '8px',
                 borderRadius: 8, cursor: 'pointer', userSelect: 'none',
                 background: isSelected ? '#FFF9C4' : 'transparent',
                 outline: isSelected ? '2px solid #FEE500' : 'none',
-                transition: 'background 0.15s',
               }}
             >
-              <div style={{
-                width: 42, height: 42, borderRadius: 21,
-                background: isSelected ? '#F5CC00' : '#FEE500',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                marginRight: 12, fontWeight: 'bold', fontSize: 18, flexShrink: 0,
-              }}>
-                {f.displayName?.[0] ?? '?'}
+              <div
+                onClick={(e) => { e.stopPropagation(); setProfileTarget({ user: { id: f.id, displayName: f.displayName, email: f.email, avatar: f.avatar, backgroundImage: f.backgroundImage }, isOwn: false }); }}
+                style={{
+                  width: 42, height: 42, borderRadius: 21, flexShrink: 0,
+                  background: f.avatar ? 'transparent' : (isSelected ? '#F5CC00' : '#FEE500'),
+                  backgroundImage: f.avatar ? `url(${f.avatar})` : undefined,
+                  backgroundSize: 'cover', backgroundPosition: 'center',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  marginRight: 12, fontWeight: 'bold', fontSize: 18,
+                }}
+              >
+                {!f.avatar && (f.displayName?.[0] ?? '?')}
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: isSelected ? 700 : 600, fontSize: 14, color: '#111' }}>{f.displayName}</div>
+                <div style={{ fontWeight: 600, fontSize: 14, color: '#111' }}>{f.displayName}</div>
                 <div style={{ fontSize: 12, color: '#888', marginTop: 1 }}>{f.email}</div>
               </div>
               {isSelected && (

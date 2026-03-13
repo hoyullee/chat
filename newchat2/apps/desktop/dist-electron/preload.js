@@ -8,3 +8,8 @@ electron.contextBridge.exposeInMainWorld("ipc", {
     return () => electron.ipcRenderer.removeListener(channel, listener);
   }
 });
+electron.contextBridge.exposeInMainWorld("windowControls", {
+  minimize: () => electron.ipcRenderer.send("win-minimize"),
+  maximize: () => electron.ipcRenderer.send("win-maximize"),
+  close: () => electron.ipcRenderer.send("win-close")
+});

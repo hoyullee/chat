@@ -26,9 +26,15 @@ export class UsersController {
     return this.usersService.findById(req.user.sub);
   }
 
+  @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  getUser(@Param('id') id: string) {
+    return this.usersService.findById(id);
+  }
+
   @Patch('me')
   @UseGuards(JwtAuthGuard)
-  updateMe(@Req() req: any, @Body() body: { displayName?: string; avatar?: string }) {
+  updateMe(@Req() req: any, @Body() body: { displayName?: string; avatar?: string; backgroundImage?: string }) {
     return this.usersService.updateProfile(req.user.sub, body);
   }
 

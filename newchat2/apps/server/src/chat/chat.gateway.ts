@@ -54,6 +54,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     client.to(data.roomId).emit('receive-message', data);
   }
 
+  @SubscribeMessage('broadcast-profile-update')
+  handleProfileUpdate(
+    @MessageBody() data: { userId: string; avatar?: string; backgroundImage?: string; displayName?: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    client.broadcast.emit('profile-updated', data);
+  }
+
   @SubscribeMessage('typing')
   handleTyping(
     @MessageBody() data: { roomId: string; userId: string; isTyping: boolean },

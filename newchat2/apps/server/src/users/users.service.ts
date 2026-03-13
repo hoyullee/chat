@@ -44,7 +44,7 @@ export class UsersService implements OnApplicationBootstrap {
     return this.userRepo.save({ email, passwordHash, displayName, role: UserRole.USER });
   }
 
-  async updateProfile(id: string, data: Partial<Pick<User, 'displayName' | 'avatar'>>) {
+  async updateProfile(id: string, data: Partial<Pick<User, 'displayName' | 'avatar' | 'backgroundImage'>>) {
     await this.userRepo.update(id, data);
     const user = await this.findById(id);
     if (!user) throw new NotFoundException();

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { api } from '../services/api';
 
-interface Friend { id: string; displayName: string; email: string; }
+interface Friend { id: string; displayName: string; email: string; avatar?: string; backgroundImage?: string; }
 interface SearchUser { id: string; displayName: string; email: string; avatar?: string; }
 
 interface FriendState {
@@ -11,6 +11,7 @@ interface FriendState {
   addFriend: (addresseeId: string) => Promise<void>;
   searchUsers: (query: string) => Promise<void>;
   clearSearch: () => void;
+  updateFriendProfile: (userId: string, data: Partial<Pick<Friend, 'displayName' | 'avatar' | 'backgroundImage'>>) => void;
 }
 
 export const useFriendStore = create<FriendState>((set) => ({
@@ -31,4 +32,7 @@ export const useFriendStore = create<FriendState>((set) => ({
     set({ searchResults: data });
   },
   clearSearch: () => set({ searchResults: [] }),
+  updateFriendProfile: (userId, data) => set((s) => ({
+    friends: s.friends.map((f) => f.id === userId ? { ...f, ...data } : f),
+  })),
 }));
